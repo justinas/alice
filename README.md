@@ -17,9 +17,7 @@ In its essence, it's just a for loop that does the wrapping for you.
 
 Your middleware constructors should have the form of
 
-```go
-func (http.Handler) http.Handler
-`
+    func (http.Handler) http.Handler
 
 Some middleware provide this out of the box.
 For ones that don't, it's trivial to write one yourself.
@@ -28,7 +26,7 @@ For ones that don't, it's trivial to write one yourself.
 func myStripPrefix(h http.Handler) http.Handler {
     return http.StripPrefix("/old", h)
 }
-`
+```
 
 This complete example shows the full power of Alice.
 
@@ -59,7 +57,7 @@ func main() {
     chain := alice.New(th.Throttle, timeoutHandler, nosurf.NewPure).Then(myHandler)
     http.ListenAndServe(":8000", chain)
 }
-`
+```
 
 Here, the request will pass [throttled](https://github.com/PuerkitoBio/throttled) first
 then an http.TimeoutHandler we've set up,
