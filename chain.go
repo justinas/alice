@@ -18,3 +18,25 @@ func New(constructors ...Constructor) Chain {
 
 	return c
 }
+
+// Chains the middleware and returns the final http.Handler
+//     New(m1, m2, m3).Then(h)
+// is equivalent to:
+//     m1(m2(m3(h)))
+// When the request comes in, it will be passed to m1, then m2, then m3
+// and finally, the given handler
+// (assuming every middleware calls the following one)
+func (c Chain) Then(h http.Handler) http.Handler {
+	var final http.Handler
+	if h != nil {
+		final = h
+	} else {
+		final = http.DefaultServeMux
+	}
+
+	for i := len(c.constructors) - 1; i >= 0; i-- {
+		final = c.constructors[i](final)
+	}
+
+	return final
+}
