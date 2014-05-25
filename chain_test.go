@@ -39,7 +39,11 @@ func TestNew(t *testing.T) {
 
 func TestThenWorksWithNoMiddleware(t *testing.T) {
 	assert.NotPanics(t, func() {
-		New()
+		chain := New()
+		app := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
+		final := chain.Then(app)
+
+		assert.Equal(t, final, app)
 	})
 }
 
