@@ -1,3 +1,4 @@
+// Package alice implements a middleware chaining solution.
 package alice
 
 import (
@@ -36,7 +37,18 @@ func TestNew(t *testing.T) {
 	assert.Equal(t, chain.constructors[1], slice[1])
 }
 
-func TestThen(t *testing.T) {
+func TestThenWorksWithNoMiddleware(t *testing.T) {
+	assert.NotPanics(t, func() {
+		New()
+	})
+}
+
+func TestThenTreatsNilAsDefaultServeMux(t *testing.T) {
+	chained := New().Then(nil)
+	assert.Equal(t, chained, http.DefaultServeMux)
+}
+
+func TestThenOrdersHandlersRight(t *testing.T) {
 	t1 := tagMiddleware("t1\n")
 	t2 := tagMiddleware("t2\n")
 	t3 := tagMiddleware("t3\n")
