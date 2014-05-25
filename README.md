@@ -15,8 +15,8 @@ to
 
 None of the other middleware chaining solutions
 behaves exactly like Alice.
-Alice is as minimal as a chaining solution gets.
-In its essence, it's just a for loop that does the wrapping for you.
+Alice is as minimal as it gets:
+in essence, it's just a for loop that does the wrapping for you.
 
 ### Usage
 
