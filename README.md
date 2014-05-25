@@ -10,7 +10,6 @@ to `alice.New(Middleware1, Middleware, Middleware3).Then(App)`.
 
 None of the other middleware chaining solutions
 behaves exactly like Alice.
-
 Alice is as minimal as a chaining solution gets.
 In its essence, it's just a for loop that does the wrapping for you.
 
@@ -18,43 +17,49 @@ In its essence, it's just a for loop that does the wrapping for you.
 
 Your middleware constructors should have the form of
 
-    func (http.Handler) http.Handler
+```go
+func (http.Handler) http.Handler
+`
 
 Some middleware provide this out of the box.
 For ones that don't, it's trivial to write one yourself.
 
-    func myStripPrefix(h http.Handler) http.Handler {
-        return http.StripPrefix("/old", h)
-    }
+```go
+func myStripPrefix(h http.Handler) http.Handler {
+    return http.StripPrefix("/old", h)
+}
+`
 
 This complete example shows the full power of Alice.
 
-	package main
+```go
+package main
 
-	import (
-		"net/http"
-		"time"
+import (
+    "net/http"
+    "time"
 
-		"github.com/PuerkitoBio/throttled"
-		"github.com/justinas/alice"
-		"github.com/justinas/nosurf"
-	)
+    "github.com/PuerkitoBio/throttled"
+    "github.com/justinas/alice"
+    "github.com/justinas/nosurf"
+)
 
-	func timeoutHandler(h http.Handler) http.Handler {
-		return http.TimeoutHandler(h, 1*time.Second, "timed out")
-	}
+func timeoutHandler(h http.Handler) http.Handler {
+    return http.TimeoutHandler(h, 1*time.Second, "timed out")
+}
 
-	func myApp(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Hello world!"))
-	}
+func myApp(w http.ResponseWriter, r *http.Request) {
+    w.Write([]byte("Hello world!"))
+}
 
-	func main() {
-		th := throttled.Interval(throttled.PerSec(10), 1, &throttled.VaryBy{Path: true}, 50)
-		myHandler := http.HandlerFunc(myApp)
+func main() {
+    th := throttled.Interval(throttled.PerSec(10), 1, &throttled.VaryBy{Path: true}, 50)
+    myHandler := http.HandlerFunc(myApp)
 
-		chain := alice.New(th.Throttle, timeoutHandler, nosurf.NewPure).Then(myHandler)
-		http.ListenAndServe(":8000", chain)
-	}
+    chain := alice.New(th.Throttle, timeoutHandler, nosurf.NewPure).Then(myHandler)
+    http.ListenAndServe(":8000", chain)
+}
+`
 
 Here, the request will pass [throttled](https://github.com/PuerkitoBio/throttled) first
 then an http.TimeoutHandler we've set up,
