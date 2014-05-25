@@ -59,7 +59,7 @@ func main() {
 }
 ```
 
-Here, the request will pass [throttled](https://github.com/PuerkitoBio/throttled) first
+Here, the request will pass [throttled](https://github.com/PuerkitoBio/throttled) first,
 then an http.TimeoutHandler we've set up,
 then [nosurf](https://github.com/justinas/nosurf)
 and will finally reach our handler.
