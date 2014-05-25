@@ -26,6 +26,8 @@ func New(constructors ...Constructor) Chain {
 // When the request comes in, it will be passed to m1, then m2, then m3
 // and finally, the given handler
 // (assuming every middleware calls the following one)
+//
+// Then() treats nil as http.DefaultServeMux.
 func (c Chain) Then(h http.Handler) http.Handler {
 	var final http.Handler
 	if h != nil {
