@@ -3,8 +3,13 @@
 `Alice` provides a convenient way to chain 
 your HTTP middleware functions and the app handler.
 
-In short, it transforms `Middleware1(Middleware2(Middleware3(App)))`
-to `alice.New(Middleware1, Middleware, Middleware3).Then(App)`.
+In short, it transforms
+
+    Middleware1(Middleware2(Middleware3(App)))
+
+to
+
+    alice.New(Middleware1, Middleware2, Middleware3).Then(App).
 
 ### Why?
 
