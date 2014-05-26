@@ -1,6 +1,6 @@
 # Alice 
 
-`Alice` provides a convenient way to chain 
+Alice provides a convenient way to chain 
 your HTTP middleware functions and the app handler.
 
 In short, it transforms
@@ -76,7 +76,6 @@ Note that Alice makes **no guarantees** for
 how one or another piece of  middleware will behave.
 It does not execute all handlers sequentially
 but wraps them in one another.
-
 If a piece of middleware were to stop the chain,
 the request will not reach the inner handlers.
 This is intentional behavior.
