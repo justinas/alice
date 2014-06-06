@@ -35,6 +35,15 @@ func New(constructors ...Constructor) Chain {
 // and finally, the given handler
 // (assuming every middleware calls the following one).
 //
+// A chain can be safely reused by calling Then() several times.
+//     stdStack := alice.New(ratelimitHandler, csrfHandler)
+//     indexPipe = stdStack.Then(indexHandler)
+//     authPipe = stdStack.Then(authHandler)
+// Note that constructors are called on every call to Then()
+// and thus several instances of the same middleware will be created
+// when a chain is reused in this way.
+// For proper middleware, this should cause no problems.
+//
 // Then() treats nil as http.DefaultServeMux.
 func (c Chain) Then(h http.Handler) http.Handler {
 	var final http.Handler
