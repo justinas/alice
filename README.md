@@ -1,5 +1,7 @@
 # Alice 
 
+[![Build Status](https://travis-ci.org/justinas/alice.svg?branch=master)](https://travis-ci.org/justinas/alice)
+
 Alice provides a convenient way to chain 
 your HTTP middleware functions and the app handler.
 
