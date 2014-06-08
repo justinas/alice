@@ -82,6 +82,8 @@ If a piece of middleware were to stop the chain,
 the request will not reach the inner handlers.
 This is intentional behavior.
 
+Alice works with Go 1.0 and higher,
+but running tests requires at least Go 1.1.
 ### Contributing
 
 0. Find an issue that bugs you / open a new one.
