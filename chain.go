@@ -59,3 +59,21 @@ func (c Chain) Then(h http.Handler) http.Handler {
 
 	return final
 }
+
+// Append extends a chain, adding the specified constructors
+// as the last ones in the request flow.
+//
+// Append returns a new chain, leaving the original one untouched.
+//
+//     stdChain := alice.New(m1, m2)
+//     extChain := stdChain.Append(m3, m4)
+//     // requests in stdChain go m1 -> m2
+//     // requests in extChain go m1 -> m2 -> m3 -> m4
+func (c Chain) Append(constructors ...Constructor) Chain {
+	newCons := make([]Constructor, len(c.constructors))
+	copy(newCons, c.constructors)
+	newCons = append(newCons, constructors...)
+
+	newChain := New(newCons...)
+	return newChain
+}

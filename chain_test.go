@@ -21,6 +21,10 @@ func tagMiddleware(tag string) Constructor {
 	}
 }
 
+var testApp = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("app\n"))
+})
+
 // Tests creating a new chain
 func TestNew(t *testing.T) {
 	c1 := func(h http.Handler) http.Handler {
@@ -40,10 +44,9 @@ func TestNew(t *testing.T) {
 func TestThenWorksWithNoMiddleware(t *testing.T) {
 	assert.NotPanics(t, func() {
 		chain := New()
-		app := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
-		final := chain.Then(app)
+		final := chain.Then(testApp)
 
-		assert.Equal(t, final, app)
+		assert.Equal(t, final, testApp)
 	})
 }
 
@@ -56,11 +59,8 @@ func TestThenOrdersHandlersRight(t *testing.T) {
 	t1 := tagMiddleware("t1\n")
 	t2 := tagMiddleware("t2\n")
 	t3 := tagMiddleware("t3\n")
-	app := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("app\n"))
-	})
 
-	chained := New(t1, t2, t3).Then(app)
+	chained := New(t1, t2, t3).Then(testApp)
 
 	w := httptest.NewRecorder()
 	r, err := http.NewRequest("GET", "/", nil)
@@ -71,4 +71,31 @@ func TestThenOrdersHandlersRight(t *testing.T) {
 	chained.ServeHTTP(w, r)
 
 	assert.Equal(t, w.Body.String(), "t1\nt2\nt3\napp\n")
+}
+
+func TestAppendAddsHandlersCorrectly(t *testing.T) {
+	chain := New(tagMiddleware("t1\n"), tagMiddleware("t2\n"))
+	newChain := chain.Append(tagMiddleware("t3\n"), tagMiddleware("t4\n"))
+
+	assert.Equal(t, len(chain.constructors), 2)
+	assert.Equal(t, len(newChain.constructors), 4)
+
+	chained := newChain.Then(testApp)
+
+	w := httptest.NewRecorder()
+	r, err := http.NewRequest("GET", "/", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	chained.ServeHTTP(w, r)
+
+	assert.Equal(t, w.Body.String(), "t1\nt2\nt3\nt4\napp\n")
+}
+
+func TestAppendRespectsImmutability(t *testing.T) {
+	chain := New(tagMiddleware(""))
+	newChain := chain.Append(tagMiddleware(""))
+
+	assert.NotEqual(t, &chain.constructors[0], &newChain.constructors[0])
 }
