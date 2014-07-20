@@ -55,6 +55,11 @@ func TestThenTreatsNilAsDefaultServeMux(t *testing.T) {
 	assert.Equal(t, chained, http.DefaultServeMux)
 }
 
+func TestThenFuncTreatsNilAsDefaultServeMux(t *testing.T) {
+	chained := New().ThenFunc(nil)
+	assert.Equal(t, chained, http.DefaultServeMux)
+}
+
 func TestThenOrdersHandlersRight(t *testing.T) {
 	t1 := tagMiddleware("t1\n")
 	t2 := tagMiddleware("t2\n")

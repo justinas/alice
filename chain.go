@@ -69,6 +69,9 @@ func (c Chain) Then(h http.Handler) http.Handler {
 //
 // ThenFunc provides all the guarantees of Then.
 func (c Chain) ThenFunc(fn http.HandlerFunc) http.Handler {
+	if fn == nil {
+		return c.Then(nil)
+	}
 	return c.Then(http.HandlerFunc(fn))
 }
 
