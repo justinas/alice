@@ -83,9 +83,10 @@ This is intentional behavior.
 
 Alice works with Go 1.0 and higher,
 but running tests requires at least Go 1.1.
+
 ### Contributing
 
 0. Find an issue that bugs you / open a new one.
 1. Discuss.
-2. Branch off the `develop` branch, commit, test.
+2. Branch off, commit, test.
 3. Make a pull request / attach the commits to the issue.
