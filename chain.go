@@ -85,9 +85,9 @@ func (c Chain) ThenFunc(fn http.HandlerFunc) http.Handler {
 //     // requests in stdChain go m1 -> m2
 //     // requests in extChain go m1 -> m2 -> m3 -> m4
 func (c Chain) Append(constructors ...Constructor) Chain {
-	newCons := make([]Constructor, len(c.constructors))
+	newCons := make([]Constructor, len(c.constructors)+len(constructors))
 	copy(newCons, c.constructors)
-	newCons = append(newCons, constructors...)
+	copy(newCons[len(c.constructors):], constructors)
 
 	newChain := New(newCons...)
 	return newChain
