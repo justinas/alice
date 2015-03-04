@@ -12,19 +12,14 @@ type Constructor func(http.Handler) http.Handler
 // Chain is effectively immutable:
 // once created, it will always hold
 // the same set of constructors in the same order.
-type Chain struct {
-	constructors []Constructor
-}
+type Chain []Constructor
 
 // New creates a new chain,
 // memorizing the given list of middleware constructors.
 // New serves no other function,
 // constructors are only called upon a call to Then().
 func New(constructors ...Constructor) Chain {
-	c := Chain{}
-	c.constructors = append(c.constructors, constructors...)
-
-	return c
+	return constructors
 }
 
 // Then chains the middleware and returns the final http.Handler.
@@ -53,8 +48,8 @@ func (c Chain) Then(h http.Handler) http.Handler {
 		final = http.DefaultServeMux
 	}
 
-	for i := len(c.constructors) - 1; i >= 0; i-- {
-		final = c.constructors[i](final)
+	for i := len(c) - 1; i >= 0; i-- {
+		final = c[i](final)
 	}
 
 	return final
@@ -85,10 +80,5 @@ func (c Chain) ThenFunc(fn http.HandlerFunc) http.Handler {
 //     // requests in stdChain go m1 -> m2
 //     // requests in extChain go m1 -> m2 -> m3 -> m4
 func (c Chain) Append(constructors ...Constructor) Chain {
-	newCons := make([]Constructor, len(c.constructors)+len(constructors))
-	copy(newCons, c.constructors)
-	copy(newCons[len(c.constructors):], constructors)
-
-	newChain := New(newCons...)
-	return newChain
+	return append(c, constructors...)
 }

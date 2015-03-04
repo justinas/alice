@@ -37,8 +37,8 @@ func TestNew(t *testing.T) {
 	slice := []Constructor{c1, c2}
 
 	chain := New(slice...)
-	assert.Equal(t, chain.constructors[0], slice[0])
-	assert.Equal(t, chain.constructors[1], slice[1])
+	assert.Equal(t, chain[0], slice[0])
+	assert.Equal(t, chain[1], slice[1])
 }
 
 func TestThenWorksWithNoMiddleware(t *testing.T) {
@@ -82,8 +82,8 @@ func TestAppendAddsHandlersCorrectly(t *testing.T) {
 	chain := New(tagMiddleware("t1\n"), tagMiddleware("t2\n"))
 	newChain := chain.Append(tagMiddleware("t3\n"), tagMiddleware("t4\n"))
 
-	assert.Equal(t, len(chain.constructors), 2)
-	assert.Equal(t, len(newChain.constructors), 4)
+	assert.Equal(t, len(chain), 2)
+	assert.Equal(t, len(newChain), 4)
 
 	chained := newChain.Then(testApp)
 
@@ -102,5 +102,5 @@ func TestAppendRespectsImmutability(t *testing.T) {
 	chain := New(tagMiddleware(""))
 	newChain := chain.Append(tagMiddleware(""))
 
-	assert.NotEqual(t, &chain.constructors[0], &newChain.constructors[0])
+	assert.NotEqual(t, &chain[0], &newChain[0])
 }
