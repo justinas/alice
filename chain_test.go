@@ -4,6 +4,7 @@ package alice
 import (
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -19,6 +20,14 @@ func tagMiddleware(tag string) Constructor {
 			h.ServeHTTP(w, r)
 		})
 	}
+}
+
+// Not recommended (https://golang.org/pkg/reflect/#Value.Pointer),
+// but the best we can do.
+func funcsEqual(f1, f2 interface{}) bool {
+	val1 := reflect.ValueOf(f1)
+	val2 := reflect.ValueOf(f2)
+	return val1.Pointer() == val2.Pointer()
 }
 
 var testApp = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -37,8 +46,8 @@ func TestNew(t *testing.T) {
 	slice := []Constructor{c1, c2}
 
 	chain := New(slice...)
-	assert.Equal(t, chain.constructors[0], slice[0])
-	assert.Equal(t, chain.constructors[1], slice[1])
+	assert.True(t, funcsEqual(chain.constructors[0], slice[0]))
+	assert.True(t, funcsEqual(chain.constructors[1], slice[1]))
 }
 
 func TestThenWorksWithNoMiddleware(t *testing.T) {
@@ -46,7 +55,7 @@ func TestThenWorksWithNoMiddleware(t *testing.T) {
 		chain := New()
 		final := chain.Then(testApp)
 
-		assert.Equal(t, final, testApp)
+		assert.True(t, funcsEqual(final, testApp))
 	})
 }
 
