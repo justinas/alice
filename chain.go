@@ -92,3 +92,28 @@ func (c Chain) Append(constructors ...Constructor) Chain {
 	newChain := New(newCons...)
 	return newChain
 }
+
+// Extend extends a chain by adding the specified chain
+// as the last one in the request flow.
+//
+// Extend returns a new chain, leaving the original one untouched.
+//
+//     stdChain := alice.New(m1, m2)
+//     ext1Chain := alice.New(m3, m4)
+//     ext2Chain := stdChain.Extend(ext1Chain)
+//     // requests in stdChain go  m1 -> m2
+//     // requests in ext1Chain go m3 -> m4
+//     // requests in ext2Chain go m1 -> m2 -> m3 -> m4
+//
+// Another example:
+//  aHtmlAfterNosurf := alice.New(m2)
+// 	aHtml := alice.New(m1, func(h http.Handler) http.Handler {
+// 		csrf := nosurf.New(h)
+// 		csrf.SetFailureHandler(aHtmlAfterNosurf.ThenFunc(csrfFail))
+// 		return csrf
+// 	}).Extend(aHtmlAfterNosurf)
+//		// requests to aHtml hitting nosurfs success handler go m1 -> nosurf -> m2 -> target-handler
+//		// requests to aHtml hitting nosurfs failure handler go m1 -> nosurf -> m2 -> csrfFail
+func (c Chain) Extend(chain Chain) Chain {
+	return c.Append(chain.constructors...)
+}
