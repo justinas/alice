@@ -10,10 +10,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// A constructor for middleware
+// An http.Handler for middleware
 // that writes its own "tag" into the RW and does nothing else.
 // Useful in checking if a chain is behaving in the right order.
-func tagMiddleware(tag string) Constructor {
+func tagMiddleware(tag string) func(http.Handler) http.Handler {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte(tag))
@@ -43,11 +43,11 @@ func TestNew(t *testing.T) {
 		return http.StripPrefix("potato", nil)
 	}
 
-	slice := []Constructor{c1, c2}
+	slice := []func(http.Handler) http.Handler{c1, c2}
 
 	chain := New(slice...)
-	assert.True(t, funcsEqual(chain.constructors[0], slice[0]))
-	assert.True(t, funcsEqual(chain.constructors[1], slice[1]))
+	assert.True(t, funcsEqual(chain.handlers[0], slice[0]))
+	assert.True(t, funcsEqual(chain.handlers[1], slice[1]))
 }
 
 func TestThenWorksWithNoMiddleware(t *testing.T) {
@@ -91,8 +91,8 @@ func TestAppendAddsHandlersCorrectly(t *testing.T) {
 	chain := New(tagMiddleware("t1\n"), tagMiddleware("t2\n"))
 	newChain := chain.Append(tagMiddleware("t3\n"), tagMiddleware("t4\n"))
 
-	assert.Equal(t, len(chain.constructors), 2)
-	assert.Equal(t, len(newChain.constructors), 4)
+	assert.Equal(t, len(chain.handlers), 2)
+	assert.Equal(t, len(newChain.handlers), 4)
 
 	chained := newChain.Then(testApp)
 
@@ -111,7 +111,7 @@ func TestAppendRespectsImmutability(t *testing.T) {
 	chain := New(tagMiddleware(""))
 	newChain := chain.Append(tagMiddleware(""))
 
-	assert.NotEqual(t, &chain.constructors[0], &newChain.constructors[0])
+	assert.NotEqual(t, &chain.handlers[0], &newChain.handlers[0])
 }
 
 func TestExtendAddsHandlersCorrectly(t *testing.T) {
@@ -119,9 +119,9 @@ func TestExtendAddsHandlersCorrectly(t *testing.T) {
 	chain2 := New(tagMiddleware("t3\n"), tagMiddleware("t4\n"))
 	newChain := chain1.Extend(chain2)
 
-	assert.Equal(t, len(chain1.constructors), 2)
-	assert.Equal(t, len(chain2.constructors), 2)
-	assert.Equal(t, len(newChain.constructors), 4)
+	assert.Equal(t, len(chain1.handlers), 2)
+	assert.Equal(t, len(chain2.handlers), 2)
+	assert.Equal(t, len(newChain.handlers), 4)
 
 	chained := newChain.Then(testApp)
 
@@ -140,5 +140,5 @@ func TestExtendRespectsImmutability(t *testing.T) {
 	chain := New(tagMiddleware(""))
 	newChain := chain.Extend(New(tagMiddleware("")))
 
-	assert.NotEqual(t, &chain.constructors[0], &newChain.constructors[0])
+	assert.NotEqual(t, &chain.handlers[0], &newChain.handlers[0])
 }
