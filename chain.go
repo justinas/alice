@@ -3,26 +3,21 @@ package alice
 
 import "net/http"
 
-// A constructor for a piece of middleware.
-// Some middleware use this constructor out of the box,
-// so in most cases you can just pass somepackage.New
-type Constructor func(http.Handler) http.Handler
-
-// Chain acts as a list of http.Handler constructors.
+// Chain acts as a list of http.Handler handlers.
 // Chain is effectively immutable:
 // once created, it will always hold
-// the same set of constructors in the same order.
+// the same set of handlers in the same order.
 type Chain struct {
-	constructors []Constructor
+	handlers []func(http.Handler) http.Handler
 }
 
 // New creates a new chain,
-// memorizing the given list of middleware constructors.
+// memorizing the given list of middleware handlers.
 // New serves no other function,
-// constructors are only called upon a call to Then().
-func New(constructors ...Constructor) Chain {
+// http.handlers are only called upon a call to Then().
+func New(handlers ...func(http.Handler) http.Handler) Chain {
 	c := Chain{}
-	c.constructors = append(c.constructors, constructors...)
+	c.handlers = append(c.handlers, handlers...)
 
 	return c
 }
@@ -39,7 +34,7 @@ func New(constructors ...Constructor) Chain {
 //     stdStack := alice.New(ratelimitHandler, csrfHandler)
 //     indexPipe = stdStack.Then(indexHandler)
 //     authPipe = stdStack.Then(authHandler)
-// Note that constructors are called on every call to Then()
+// Note that handlers are called on every call to Then()
 // and thus several instances of the same middleware will be created
 // when a chain is reused in this way.
 // For proper middleware, this should cause no problems.
@@ -53,8 +48,8 @@ func (c Chain) Then(h http.Handler) http.Handler {
 		final = http.DefaultServeMux
 	}
 
-	for i := len(c.constructors) - 1; i >= 0; i-- {
-		final = c.constructors[i](final)
+	for i := len(c.handlers) - 1; i >= 0; i-- {
+		final = c.handlers[i](final)
 	}
 
 	return final
@@ -75,7 +70,7 @@ func (c Chain) ThenFunc(fn http.HandlerFunc) http.Handler {
 	return c.Then(http.HandlerFunc(fn))
 }
 
-// Append extends a chain, adding the specified constructors
+// Append extends a chain, adding the specified handlers
 // as the last ones in the request flow.
 //
 // Append returns a new chain, leaving the original one untouched.
@@ -84,10 +79,10 @@ func (c Chain) ThenFunc(fn http.HandlerFunc) http.Handler {
 //     extChain := stdChain.Append(m3, m4)
 //     // requests in stdChain go m1 -> m2
 //     // requests in extChain go m1 -> m2 -> m3 -> m4
-func (c Chain) Append(constructors ...Constructor) Chain {
-	newCons := make([]Constructor, len(c.constructors)+len(constructors))
-	copy(newCons, c.constructors)
-	copy(newCons[len(c.constructors):], constructors)
+func (c Chain) Append(handlers ...func(http.Handler) http.Handler) Chain {
+	newCons := make([]func(http.Handler) http.Handler, len(c.handlers)+len(handlers))
+	copy(newCons, c.handlers)
+	copy(newCons[len(c.handlers):], handlers)
 
 	newChain := New(newCons...)
 	return newChain
@@ -115,5 +110,5 @@ func (c Chain) Append(constructors ...Constructor) Chain {
 //		// requests to aHtml hitting nosurfs success handler go m1 -> nosurf -> m2 -> target-handler
 //		// requests to aHtml hitting nosurfs failure handler go m1 -> nosurf -> m2 -> csrfFail
 func (c Chain) Extend(chain Chain) Chain {
-	return c.Append(chain.constructors...)
+	return c.Append(chain.handlers...)
 }
