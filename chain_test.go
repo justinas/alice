@@ -142,3 +142,28 @@ func TestExtendRespectsImmutability(t *testing.T) {
 
 	assert.NotEqual(t, &chain.constructors[0], &newChain.constructors[0])
 }
+
+func TestCopy(t *testing.T) {
+	chain := New(tagMiddleware("t1\n"), tagMiddleware("t2\n"))
+	newChain := chain.copy()
+
+	assert.NotEqual(t, &chain.constructors[0], &newChain.constructors[0])
+	assert.NotEqual(t, &chain, &newChain)
+	assert.NotEqual(t, chain, newChain)
+
+	assert.True(t, len(chain.constructors) == len(newChain.constructors))
+
+	chain.constructors[1] = tagMiddleware(":D")
+
+	chained := newChain.Then(testApp)
+
+	w := httptest.NewRecorder()
+	r, err := http.NewRequest("GET", "/", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	chained.ServeHTTP(w, r)
+
+	assert.Equal(t, w.Body.String(), "t1\nt2\napp\n")
+}

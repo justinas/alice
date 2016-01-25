@@ -117,3 +117,11 @@ func (c Chain) Append(constructors ...Constructor) Chain {
 func (c Chain) Extend(chain Chain) Chain {
 	return c.Append(chain.constructors...)
 }
+
+//copy a chain
+func (c Chain) copy() Chain {
+	newCons := make([]Constructor, len(c.constructors))
+	copy(newCons, c.constructors)
+	newC := New(newCons...)
+	return newC
+}
