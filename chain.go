@@ -72,7 +72,7 @@ func (c Chain) ThenFunc(fn http.HandlerFunc) http.Handler {
 	if fn == nil {
 		return c.Then(nil)
 	}
-	return c.Then(http.HandlerFunc(fn))
+	return c.Then(fn)
 }
 
 // Append extends a chain, adding the specified constructors
