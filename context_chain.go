@@ -11,20 +11,25 @@ type ContextualizedConstructor func(ContextualizedHandler) ContextualizedHandler
 
 //ContextualizedHandler is a http.Handler with a context
 type ContextualizedHandler interface {
-	ServeHTTP(context.Context, http.ResponseWriter, *http.Request)
+	ServeHTTPC(context.Context, http.ResponseWriter, *http.Request)
 }
 
 //ContextualizedHandlerFunc is a http.HandlerFunc with a context
 type ContextualizedHandlerFunc func(context.Context, http.ResponseWriter, *http.Request)
 
-func (f ContextualizedHandlerFunc) ServeHTTP(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+//ServeHTTPC is like serve http but with a context
+func (f ContextualizedHandlerFunc) ServeHTTPC(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	f(ctx, w, r)
 }
 
+//ContextualizedChain is a chain of contextualised handlers
+//it behaves just like Chain
 type ContextualizedChain struct {
 	constructors []ContextualizedConstructor
 }
 
+//NewContextualized instantiates a new Chain of contextualised http handlers
+//Just like New
 func NewContextualized(constructors ...ContextualizedConstructor) (cc ContextualizedChain) {
 	cc.constructors = append(cc.constructors, constructors...)
 	return
@@ -39,10 +44,10 @@ func NewContextualized(constructors ...ContextualizedConstructor) (cc Contextual
 //     extChain := stdChain.Append(m3, m4)
 //     // requests in stdChain go m1 -> m2
 //     // requests in extChain go m1 -> m2 -> m3 -> m4
-func (c ContextualizedChain) Append(constructors ...ContextualizedConstructor) ContextualizedChain {
-	newCons := make([]ContextualizedConstructor, len(c.constructors)+len(constructors))
-	copy(newCons, c.constructors)
-	copy(newCons[len(c.constructors):], constructors)
+func (cc ContextualizedChain) Append(constructors ...ContextualizedConstructor) ContextualizedChain {
+	newCons := make([]ContextualizedConstructor, len(cc.constructors)+len(constructors))
+	copy(newCons, cc.constructors)
+	copy(newCons[len(cc.constructors):], constructors)
 
 	return NewContextualized(newCons...)
 }
@@ -61,6 +66,7 @@ func (cc ContextualizedChain) Then(fn ContextualizedHandler) ContextualizedHandl
 	return fn
 }
 
+// ThenFunc works identically to Chain.ThenFunc but with a contextualized handler
 func (cc ContextualizedChain) ThenFunc(fn ContextualizedHandlerFunc) ContextualizedHandler {
 	if fn == nil {
 		return cc.Then(nil)

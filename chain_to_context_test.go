@@ -17,14 +17,14 @@ func ctxTagMiddleware(tag string) ContextualizedConstructor {
 	return func(h ContextualizedHandler) ContextualizedHandler {
 		return ContextualizedHandlerFunc(func(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte(tag))
-			h.ServeHTTP(ctx, w, r)
+			h.ServeHTTPC(ctx, w, r)
 		})
 	}
 }
 
-var ctxTestApp = ContextualizedHandlerFunc(func(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+var ctxTestApp = func(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("app\n"))
-})
+}
 
 // Tests creating a new context capable chain
 func TestAppendContext(t *testing.T) {
@@ -42,9 +42,8 @@ func TestAppendContext(t *testing.T) {
 		bg := context.Background()
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte("ctx\n"))
-			next.ServeHTTP(bg, w, r)
+			next.ServeHTTPC(bg, w, r)
 		})
-		return nil
 	}
 
 	toCtxchain := chain.Contextualize(c2c)
@@ -61,7 +60,7 @@ func TestAppendContext(t *testing.T) {
 	assert.True(t, funcsEqual(toCtxchain.chain.constructors[0], slice[0]))
 	assert.True(t, funcsEqual(toCtxchain.chain.constructors[1], slice[1]))
 
-	cchained := toCtxchain.Then(ctxTestApp)
+	cchained := toCtxchain.ThenFunc(ctxTestApp)
 
 	w := httptest.NewRecorder()
 	r, err := http.NewRequest("GET", "/", nil)
