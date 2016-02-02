@@ -13,9 +13,9 @@ import (
 // A constructor for middleware
 // that writes its own "tag" into the RW and does nothing else.
 // Useful in checking if a chain is behaving in the right order.
-func ctxTagMiddleware(tag string) ContextualizedConstructor {
-	return func(h ContextualizedHandler) ContextualizedHandler {
-		return ContextualizedHandlerFunc(func(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+func ctxTagMiddleware(tag string) ContextualisedConstructor {
+	return func(h ContextualisedHandler) ContextualisedHandler {
+		return ContextualisedHandlerFunc(func(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte(tag))
 			h.ServeHTTPC(ctx, w, r)
 		})
@@ -38,7 +38,7 @@ func TestAppendContext(t *testing.T) {
 	assert.True(t, funcsEqual(chain.constructors[0], slice[0]))
 	assert.True(t, funcsEqual(chain.constructors[1], slice[1]))
 
-	c2c := func(next ContextualizedHandler) http.Handler {
+	c2c := func(next ContextualisedHandler) http.Handler {
 		bg := context.Background()
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte("ctx\n"))
@@ -46,7 +46,7 @@ func TestAppendContext(t *testing.T) {
 		})
 	}
 
-	toCtxchain := chain.Contextualize(c2c)
+	toCtxchain := chain.Contextualise(c2c)
 
 	assert.True(t, funcsEqual(toCtxchain.transformer, c2c))
 

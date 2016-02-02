@@ -6,31 +6,31 @@ import (
 	"golang.org/x/net/context"
 )
 
-//ContextualizedConstructor is a Constructor with a context
-type ContextualizedConstructor func(ContextualizedHandler) ContextualizedHandler
+//ContextualisedConstructor is a Constructor with a context
+type ContextualisedConstructor func(ContextualisedHandler) ContextualisedHandler
 
-//ContextualizedHandler is a http.Handler with a context
-type ContextualizedHandler interface {
+//ContextualisedHandler is a http.Handler with a context
+type ContextualisedHandler interface {
 	ServeHTTPC(context.Context, http.ResponseWriter, *http.Request)
 }
 
-//ContextualizedHandlerFunc is a http.HandlerFunc with a context
-type ContextualizedHandlerFunc func(context.Context, http.ResponseWriter, *http.Request)
+//ContextualisedHandlerFunc is a http.HandlerFunc with a context
+type ContextualisedHandlerFunc func(context.Context, http.ResponseWriter, *http.Request)
 
 //ServeHTTPC is like serve http but with a context
-func (f ContextualizedHandlerFunc) ServeHTTPC(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+func (f ContextualisedHandlerFunc) ServeHTTPC(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	f(ctx, w, r)
 }
 
-//ContextualizedChain is a chain of contextualised handlers
+//ContextualisedChain is a chain of contextualised handlers
 //it behaves just like Chain
-type ContextualizedChain struct {
-	constructors []ContextualizedConstructor
+type ContextualisedChain struct {
+	constructors []ContextualisedConstructor
 }
 
-//NewContextualized instantiates a new Chain of contextualised http handlers
+//NewContextualised instantiates a new Chain of contextualised http handlers
 //Just like New
-func NewContextualized(constructors ...ContextualizedConstructor) (cc ContextualizedChain) {
+func NewContextualised(constructors ...ContextualisedConstructor) (cc ContextualisedChain) {
 	cc.constructors = append(cc.constructors, constructors...)
 	return
 }
@@ -44,18 +44,18 @@ func NewContextualized(constructors ...ContextualizedConstructor) (cc Contextual
 //     extChain := stdChain.Append(m3, m4)
 //     // requests in stdChain go m1 -> m2
 //     // requests in extChain go m1 -> m2 -> m3 -> m4
-func (cc ContextualizedChain) Append(constructors ...ContextualizedConstructor) ContextualizedChain {
-	newCons := make([]ContextualizedConstructor, len(cc.constructors)+len(constructors))
+func (cc ContextualisedChain) Append(constructors ...ContextualisedConstructor) ContextualisedChain {
+	newCons := make([]ContextualisedConstructor, len(cc.constructors)+len(constructors))
 	copy(newCons, cc.constructors)
 	copy(newCons[len(cc.constructors):], constructors)
 
-	return NewContextualized(newCons...)
+	return NewContextualised(newCons...)
 }
 
 // Then works identically to Chain.Then but with a contextualized handler
-func (cc ContextualizedChain) Then(fn ContextualizedHandler) ContextualizedHandler {
+func (cc ContextualisedChain) Then(fn ContextualisedHandler) ContextualisedHandler {
 	if fn == nil {
-		fn = ContextualizedHandlerFunc(func(_ context.Context, w http.ResponseWriter, r *http.Request) {
+		fn = ContextualisedHandlerFunc(func(_ context.Context, w http.ResponseWriter, r *http.Request) {
 			http.DefaultServeMux.ServeHTTP(w, r)
 		})
 	}
@@ -67,7 +67,7 @@ func (cc ContextualizedChain) Then(fn ContextualizedHandler) ContextualizedHandl
 }
 
 // ThenFunc works identically to Chain.ThenFunc but with a contextualized handler
-func (cc ContextualizedChain) ThenFunc(fn ContextualizedHandlerFunc) ContextualizedHandler {
+func (cc ContextualisedChain) ThenFunc(fn ContextualisedHandlerFunc) ContextualisedHandler {
 	if fn == nil {
 		return cc.Then(nil)
 	}

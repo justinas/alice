@@ -4,30 +4,30 @@ import "net/http"
 
 //ToContextConstructor allows you to chain a non contextualized
 //http handler with a contextualized one.
-type ToContextConstructor func(ContextualizedHandler) http.Handler
+type ToContextConstructor func(ContextualisedHandler) http.Handler
 
-// Contextualize allows you to append a contextualized http handler
+// Contextualise allows you to append a contextualized http handler
 // to your normal chain thus allowing to add ctx support to all
 // subsequent http handlers.
-func (c Chain) Contextualize(transformer ToContextConstructor) (cc toContextualizedChain) {
-	return toContextualizedChain{
+func (c Chain) Contextualise(transformer ToContextConstructor) (cc toContextualisedChain) {
+	return toContextualisedChain{
 		chain:       c.copy(),
 		transformer: transformer,
 	}
 }
 
-// toContextualizedChain acts as a list of non contextualized http.Handlers and then contextualized http.Handlers.
-// toContextualizedChain is effectively immutable:
+// toContextualisedChain acts as a list of non contextualized http.Handlers and then contextualized http.Handlers.
+// toContextualisedChain is effectively immutable:
 // once created, it will always hold
 // the same set of constructors in the same order.
-type toContextualizedChain struct {
+type toContextualisedChain struct {
 	chain       Chain
 	transformer ToContextConstructor
-	cchain      ContextualizedChain
+	cchain      ContextualisedChain
 }
 
-func (tcc toContextualizedChain) Append(constructors ...ContextualizedConstructor) toContextualizedChain {
-	return toContextualizedChain{
+func (tcc toContextualisedChain) Append(constructors ...ContextualisedConstructor) toContextualisedChain {
+	return toContextualisedChain{
 		chain:       tcc.chain.copy(),
 		transformer: tcc.transformer,
 		cchain:      tcc.cchain.Append(constructors...),
@@ -35,7 +35,7 @@ func (tcc toContextualizedChain) Append(constructors ...ContextualizedConstructo
 }
 
 // Then works identically to Chain.Then but with a contextualized handler
-func (tcc toContextualizedChain) Then(cfinal ContextualizedHandler) http.Handler {
+func (tcc toContextualisedChain) Then(cfinal ContextualisedHandler) http.Handler {
 	cfinal = tcc.cchain.Then(cfinal)
 
 	final := tcc.transformer(cfinal)
@@ -43,7 +43,7 @@ func (tcc toContextualizedChain) Then(cfinal ContextualizedHandler) http.Handler
 	return tcc.chain.Then(final)
 }
 
-func (tcc toContextualizedChain) ThenFunc(fn ContextualizedHandlerFunc) http.Handler {
+func (tcc toContextualisedChain) ThenFunc(fn ContextualisedHandlerFunc) http.Handler {
 	if fn == nil {
 		return tcc.Then(nil)
 	}
