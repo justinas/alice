@@ -21,10 +21,7 @@ type Chain struct {
 // New serves no other function,
 // constructors are only called upon a call to Then().
 func New(constructors ...Constructor) Chain {
-	c := Chain{}
-	c.constructors = append(c.constructors, constructors...)
-
-	return c
+	return Chain{append(([]Constructor)(nil), constructors...)}
 }
 
 // Then chains the middleware and returns the final http.Handler.
