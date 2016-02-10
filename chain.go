@@ -43,18 +43,15 @@ func New(constructors ...Constructor) Chain {
 //
 // Then() treats nil as http.DefaultServeMux.
 func (c Chain) Then(h http.Handler) http.Handler {
-	var final http.Handler
-	if h != nil {
-		final = h
-	} else {
-		final = http.DefaultServeMux
+	if h == nil {
+		h = http.DefaultServeMux
 	}
 
 	for i := len(c.constructors) - 1; i >= 0; i-- {
-		final = c.constructors[i](final)
+		h = c.constructors[i](h)
 	}
 
-	return final
+	return h
 }
 
 // ThenFunc works identically to Then, but takes
@@ -86,8 +83,7 @@ func (c Chain) Append(constructors ...Constructor) Chain {
 	copy(newCons, c.constructors)
 	copy(newCons[len(c.constructors):], constructors)
 
-	newChain := New(newCons...)
-	return newChain
+	return New(newCons...)
 }
 
 // Extend extends a chain by adding the specified chain

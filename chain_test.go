@@ -69,6 +69,16 @@ func TestThenFuncTreatsNilAsDefaultServeMux(t *testing.T) {
 	assert.Equal(t, chained, http.DefaultServeMux)
 }
 
+func TestThenFuncConstructsHandlerFunc(t *testing.T) {
+	fn := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(200)
+	})
+	chained := New().ThenFunc(fn)
+	rec := httptest.NewRecorder()
+	chained.ServeHTTP(rec, (*http.Request)(nil))
+	assert.Equal(t, 200, rec.Code)
+}
+
 func TestThenOrdersHandlersRight(t *testing.T) {
 	t1 := tagMiddleware("t1\n")
 	t2 := tagMiddleware("t2\n")
