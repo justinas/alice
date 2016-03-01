@@ -13,7 +13,7 @@ In short, it transforms
 
 to
 
-    alice.New(Middleware1, Middleware2, Middleware3).Then(App).
+    alice.New(Middleware1, Middleware2, Middleware3).Then(App)
 
 ### Why?
 
@@ -49,7 +49,7 @@ import (
     "net/http"
     "time"
 
-    "github.com/PuerkitoBio/throttled"
+    "github.com/throttled/throttled"
     "github.com/justinas/alice"
     "github.com/justinas/nosurf"
 )
