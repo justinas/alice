@@ -49,7 +49,7 @@ import (
     "net/http"
     "time"
 
-    "github.com/PuerkitoBio/throttled"
+    "github.com/throttled/throttled"
     "github.com/justinas/alice"
     "github.com/justinas/nosurf"
 )
