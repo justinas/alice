@@ -13,7 +13,7 @@ In short, it transforms
 
 to
 
-    alice.New(Middleware1, Middleware2, Middleware3).Then(App).
+    alice.New(Middleware1, Middleware2, Middleware3).Then(App)
 
 ### Why?
 
