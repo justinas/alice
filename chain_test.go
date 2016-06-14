@@ -131,7 +131,7 @@ func TestExtendAddsHandlersCorrectly(t *testing.T) {
 		t.Error("chain2 should contain 2 constructors")
 	}
 	if len(newChain.constructors) != 4 {
-		t.Error("newChainshould contain 4 constructors")
+		t.Error("newChain should contain 4 constructors")
 	}
 
 	chained := newChain.Then(testApp)
