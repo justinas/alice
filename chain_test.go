@@ -32,6 +32,25 @@ var testApp = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("app\n"))
 })
 
+func TestNew(t *testing.T) {
+	c1 := func(h http.Handler) http.Handler {
+		return nil
+	}
+
+	c2 := func(h http.Handler) http.Handler {
+		return http.StripPrefix("potato", nil)
+	}
+
+	slice := []Constructor{c1, c2}
+
+	chain := New(slice...)
+	for k := range slice {
+		if !funcsEqual(chain.constructors[k], slice[k]) {
+			t.Error("New does not add constructors correctly")
+		}
+	}
+}
+
 func TestThenWorksWithNoMiddleware(t *testing.T) {
 	if !funcsEqual(New().Then(testApp), testApp) {
 		t.Error("Then does not work with no middleware")
