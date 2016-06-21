@@ -66,7 +66,7 @@ func (c Chain) ThenFunc(fn http.HandlerFunc) http.Handler {
 	if fn == nil {
 		return c.Then(nil)
 	}
-	return c.Then(http.HandlerFunc(fn))
+	return c.Then(fn)
 }
 
 // Append extends a chain, adding the specified constructors
@@ -109,4 +109,12 @@ func (c Chain) Append(constructors ...Constructor) Chain {
 //		// requests to aHtml hitting nosurfs failure handler go m1 -> nosurf -> m2 -> csrfFail
 func (c Chain) Extend(chain Chain) Chain {
 	return c.Append(chain.constructors...)
+}
+
+//copy a chain
+func (c Chain) copy() Chain {
+	newCons := make([]Constructor, len(c.constructors))
+	copy(newCons, c.constructors)
+	newC := New(newCons...)
+	return newC
 }
