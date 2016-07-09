@@ -83,7 +83,7 @@ func (c Chain) Append(constructors ...Constructor) Chain {
 	newCons = append(newCons, c.constructors...)
 	newCons = append(newCons, constructors...)
 
-	return New(newCons...)
+	return Chain{newCons}
 }
 
 // Extend extends a chain by adding the specified chain
