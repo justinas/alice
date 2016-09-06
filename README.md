@@ -84,9 +84,8 @@ and will finally reach our handler.
 
 Note that Alice makes **no guarantees** for
 how one or another piece of  middleware will behave.
-It executes all middleware sequentially so that if a
-piece of middleware were to stop the chain,
-the request will not reach the inner handlers.
+Once it passes the execution to the outer layer of middleware,
+it has no saying in whether middleware will execute the inner handlers.
 This is intentional behavior.
 
 Alice works with Go 1.0 and higher,
