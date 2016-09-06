@@ -9,11 +9,15 @@ your HTTP middleware functions and the app handler.
 
 In short, it transforms
 
-    Middleware1(Middleware2(Middleware3(App)))
+```go
+Middleware1(Middleware2(Middleware3(App)))
+```
 
 to
 
-    alice.New(Middleware1, Middleware2, Middleware3).Then(App)
+```go
+alice.New(Middleware1, Middleware2, Middleware3).Then(App)
+```
 
 ### Why?
 
@@ -29,7 +33,9 @@ for explanation how Alice is different from other chaining solutions.
 
 Your middleware constructors should have the form of
 
-    func (http.Handler) http.Handler
+```go
+func (http.Handler) http.Handler
+```
 
 Some middleware provide this out of the box.
 For ones that don't, it's trivial to write one yourself.
