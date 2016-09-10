@@ -1,8 +1,5 @@
 language: go
 
-install: 
-  - go get github.com/stretchr/testify/assert
-
 matrix:
   include:
     - go: 1.0
