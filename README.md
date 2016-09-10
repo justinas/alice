@@ -88,8 +88,7 @@ Once it passes the execution to the outer layer of middleware,
 it has no saying in whether middleware will execute the inner handlers.
 This is intentional behavior.
 
-Alice works with Go 1.0 and higher,
-but running tests requires at least Go 1.1.
+Alice works with Go 1.0 and higher.
 
 ### Contributing
 
