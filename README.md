@@ -90,6 +90,13 @@ This is intentional behavior.
 
 Alice works with Go 1.0 and higher.
 
+### Bob
+Just as Alice provides a convenient mechanism of chaining HTTP handlers, Bob provides the same capability for the client-side HTTP round trippers (`http.RoundTripper`).
+
+For all intents and purposes, Bob works exactly the same way as Alice does. Replace all references to `http.Handler` with `http.RoundTripper`, and that's how Bob works.
+
+The only difference is introducing `bob.RoundTripperFunc` (akin to `http.HandlerFunc`) as it is not provided by the Go framework.
+
 ### Contributing
 
 0. Find an issue that bugs you / open a new one.
