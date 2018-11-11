@@ -3,25 +3,20 @@ package alice
 
 import "net/http"
 
-// A constructor for a piece of middleware.
-// Some middleware use this constructor out of the box,
-// so in most cases you can just pass somepackage.New
-type Constructor func(http.Handler) http.Handler
-
 // Chain acts as a list of http.Handler constructors.
 // Chain is effectively immutable:
 // once created, it will always hold
 // the same set of constructors in the same order.
 type Chain struct {
-	constructors []Constructor
+	constructors []func(http.Handler) http.Handler
 }
 
 // New creates a new chain,
 // memorizing the given list of middleware constructors.
 // New serves no other function,
 // constructors are only called upon a call to Then().
-func New(constructors ...Constructor) Chain {
-	return Chain{append(([]Constructor)(nil), constructors...)}
+func New(constructors ...func(http.Handler) http.Handler) Chain {
+	return Chain{append(([]func(http.Handler) http.Handler)(nil), constructors...)}
 }
 
 // Then chains the middleware and returns the final http.Handler.
@@ -78,8 +73,8 @@ func (c Chain) ThenFunc(fn http.HandlerFunc) http.Handler {
 //     extChain := stdChain.Append(m3, m4)
 //     // requests in stdChain go m1 -> m2
 //     // requests in extChain go m1 -> m2 -> m3 -> m4
-func (c Chain) Append(constructors ...Constructor) Chain {
-	newCons := make([]Constructor, 0, len(c.constructors)+len(constructors))
+func (c Chain) Append(constructors ...func(http.Handler) http.Handler) Chain {
+	newCons := make([]func(http.Handler) http.Handler, 0, len(c.constructors)+len(constructors))
 	newCons = append(newCons, c.constructors...)
 	newCons = append(newCons, constructors...)
 
