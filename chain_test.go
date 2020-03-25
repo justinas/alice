@@ -20,6 +20,12 @@ func tagMiddleware(tag string) Constructor {
 	}
 }
 
+func tagEndware(tag string) Endware {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(tag))
+	})
+}
+
 // Not recommended (https://golang.org/pkg/reflect/#Value.Pointer),
 // but the best we can do.
 func funcsEqual(f1, f2 interface{}) bool {
@@ -51,9 +57,30 @@ func TestNew(t *testing.T) {
 	}
 }
 
+func TestAfter(t *testing.T) {
+	e1 := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
+
+	e2 := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
+
+	slice := []Endware{e1, e2}
+
+	chain := New().After(slice...)
+	for k := range slice {
+		if !funcsEqual(chain.endwares[k], slice[k]) {
+			t.Error("After does not add endwares correctly")
+		}
+	}
+}
+
 func TestThenWorksWithNoMiddleware(t *testing.T) {
 	if !funcsEqual(New().Then(testApp), testApp) {
 		t.Error("Then does not work with no middleware")
+	}
+}
+
+func TestThenWorksWithNoEndware(t *testing.T) {
+	if !funcsEqual(New().After().Then(testApp), testApp) {
+		t.Error("Then does not work with no endware")
 	}
 }
 
@@ -87,8 +114,11 @@ func TestThenOrdersHandlersCorrectly(t *testing.T) {
 	t1 := tagMiddleware("t1\n")
 	t2 := tagMiddleware("t2\n")
 	t3 := tagMiddleware("t3\n")
+	e1 := tagEndware("e1\n")
+	e2 := tagEndware("e2\n")
+	e3 := tagEndware("e3\n")
 
-	chained := New(t1, t2, t3).Then(testApp)
+	chained := New(t1, t2, t3).After(e1, e2, e3).Then(testApp)
 
 	w := httptest.NewRecorder()
 	r, err := http.NewRequest("GET", "/", nil)
@@ -98,7 +128,7 @@ func TestThenOrdersHandlersCorrectly(t *testing.T) {
 
 	chained.ServeHTTP(w, r)
 
-	if w.Body.String() != "t1\nt2\nt3\napp\n" {
+	if w.Body.String() != "t1\nt2\nt3\napp\ne1\ne2\ne3\n" {
 		t.Error("Then does not order handlers correctly")
 	}
 }
@@ -134,23 +164,44 @@ func TestAppendRespectsImmutability(t *testing.T) {
 	newChain := chain.Append(tagMiddleware(""))
 
 	if &chain.constructors[0] == &newChain.constructors[0] {
-		t.Error("Apppend does not respect immutability")
+		t.Error("Append does not respect immutability")
+	}
+}
+
+func TestAppendEndwareRespectsImmutability(t *testing.T) {
+	chain := New().After(tagEndware(""))
+	newChain := chain.AppendEndware(tagEndware(""))
+
+	if &chain.endwares[0] == &newChain.endwares[0] {
+		t.Error("AppendEndware does not respect immutability")
 	}
 }
 
 func TestExtendAddsHandlersCorrectly(t *testing.T) {
 	chain1 := New(tagMiddleware("t1\n"), tagMiddleware("t2\n"))
-	chain2 := New(tagMiddleware("t3\n"), tagMiddleware("t4\n"))
+	chain2 := New(tagMiddleware("t3\n"), tagMiddleware("t4\n")).
+		After(tagEndware("e1\n"), tagEndware("e2\n"))
 	newChain := chain1.Extend(chain2)
 
 	if len(chain1.constructors) != 2 {
 		t.Error("chain1 should contain 2 constructors")
 	}
+	if len(chain1.endwares) != 0 {
+		t.Error("chain1 should contain 0 endwares")
+	}
+
 	if len(chain2.constructors) != 2 {
 		t.Error("chain2 should contain 2 constructors")
 	}
+	if len(chain2.endwares) != 2 {
+		t.Error("chain2 should contain 2 endwares")
+	}
+
 	if len(newChain.constructors) != 4 {
 		t.Error("newChain should contain 4 constructors")
+	}
+	if len(newChain.endwares) != 2 {
+		t.Error("newChain should contain 2 endwares")
 	}
 
 	chained := newChain.Then(testApp)
@@ -163,16 +214,20 @@ func TestExtendAddsHandlersCorrectly(t *testing.T) {
 
 	chained.ServeHTTP(w, r)
 
-	if w.Body.String() != "t1\nt2\nt3\nt4\napp\n" {
+	if w.Body.String() != "t1\nt2\nt3\nt4\napp\ne1\ne2\n" {
 		t.Error("Extend does not add handlers in correctly")
 	}
 }
 
 func TestExtendRespectsImmutability(t *testing.T) {
-	chain := New(tagMiddleware(""))
+	chain := New(tagMiddleware("")).After(tagEndware(""))
 	newChain := chain.Extend(New(tagMiddleware("")))
 
 	if &chain.constructors[0] == &newChain.constructors[0] {
 		t.Error("Extend does not respect immutability")
+	}
+
+	if &chain.endwares[0] == &newChain.endwares[0] {
+		t.Error("Extend does not respect immutability for endwares")
 	}
 }
