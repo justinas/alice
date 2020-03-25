@@ -58,9 +58,13 @@ func TestNew(t *testing.T) {
 }
 
 func TestAfter(t *testing.T) {
-	e1 := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
+	e1 := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("e1\n"))
+	})
 
-	e2 := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
+	e2 := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("e2\n"))
+	})
 
 	slice := []Endware{e1, e2}
 
@@ -85,13 +89,13 @@ func TestThenWorksWithNoEndware(t *testing.T) {
 }
 
 func TestThenTreatsNilAsDefaultServeMux(t *testing.T) {
-	if New().Then(nil) != http.DefaultServeMux {
+	if New().After().Then(nil) != http.DefaultServeMux {
 		t.Error("Then does not treat nil as DefaultServeMux")
 	}
 }
 
 func TestThenFuncTreatsNilAsDefaultServeMux(t *testing.T) {
-	if New().ThenFunc(nil) != http.DefaultServeMux {
+	if New().After().ThenFunc(nil) != http.DefaultServeMux {
 		t.Error("ThenFunc does not treat nil as DefaultServeMux")
 	}
 }
@@ -100,7 +104,7 @@ func TestThenFuncConstructsHandlerFunc(t *testing.T) {
 	fn := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(200)
 	})
-	chained := New().ThenFunc(fn)
+	chained := New().After().ThenFunc(fn)
 	rec := httptest.NewRecorder()
 
 	chained.ServeHTTP(rec, (*http.Request)(nil))
@@ -291,10 +295,10 @@ func TestExtendAddsHandlersCorrectly(t *testing.T) {
 
 func TestExtendRespectsImmutability(t *testing.T) {
 	chain := New(tagMiddleware("")).After(tagEndware(""))
-	newChain := chain.Extend(New(tagMiddleware("")))
+	newChain := chain.Extend(New())
 
 	if &chain.constructors[0] == &newChain.constructors[0] {
-		t.Error("Extend does not respect immutability")
+		t.Error("Extend does not respect immutability for constructors")
 	}
 
 	if &chain.endwares[0] == &newChain.endwares[0] {
