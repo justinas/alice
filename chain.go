@@ -112,7 +112,7 @@ func (c Chain) Append(constructors ...Constructor) Chain {
 	newCons = append(newCons, c.constructors...)
 	newCons = append(newCons, constructors...)
 
-	return Chain{newCons, c.endwares}
+	return New(newCons...).AppendEndware(c.endwares...)
 }
 
 // Extend extends a chain by adding the specified chain
@@ -157,7 +157,13 @@ type Endware http.Handler
 // Endwares are executed after both the constructors and
 // the Then() handler are called.
 func (c Chain) After(endwares ...Endware) Chain {
-	return Chain{c.constructors, c.endwares}.AppendEndware(endwares...)
+	newEnds := make([]Endware, 0, len(c.endwares)+len(endwares))
+	newEnds = append(newEnds, c.endwares...)
+	newEnds = append(newEnds, endwares...)
+
+	newC := New(c.constructors...)
+	newC.endwares = newEnds
+	return newC
 }
 
 // AfterFuncs works identically to After, but takes HandlerFuncs
@@ -175,7 +181,7 @@ func (c Chain) AfterFuncs(fns ...func(w http.ResponseWriter, r *http.Request)) C
 		endwares[i] = http.HandlerFunc(fn)
 	}
 
-	return Chain{c.constructors, c.endwares}.AppendEndware(endwares...)
+	return c.After(endwares...)
 }
 
 // AppendEndware extends a chain, adding the specified endwares
@@ -189,11 +195,7 @@ func (c Chain) AfterFuncs(fns ...func(w http.ResponseWriter, r *http.Request)) C
 //     // requests in stdHandler go m1 -> handler -> e1 -> e2
 //     // requests in extHandler go m1 -> handler -> e1 -> e2 -> e3 -> e4
 func (c Chain) AppendEndware(endwares ...Endware) Chain {
-	newEnds := make([]Endware, 0, len(c.endwares)+len(endwares))
-	newEnds = append(newEnds, c.endwares...)
-	newEnds = append(newEnds, endwares...)
-
-	return Chain{c.constructors, newEnds}
+	return New(c.constructors...).After(append(c.endwares, endwares...)...)
 }
 
 // AppendEndwareFuncs works identically to AppendEndware, but takes HandlerFuncs
@@ -211,5 +213,6 @@ func (c Chain) AppendEndwareFuncs(fns ...func(w http.ResponseWriter, r *http.Req
 		endwares[i] = http.HandlerFunc(fn)
 	}
 
-	return Chain{c.constructors, c.endwares}.AppendEndware(endwares...)
+	return c.AppendEndware(endwares...)
+
 }

@@ -140,8 +140,14 @@ func TestAppendAddsHandlersCorrectly(t *testing.T) {
 	if len(chain.constructors) != 2 {
 		t.Error("chain should have 2 constructors")
 	}
+	if len(chain.endwares) != 0 {
+		t.Error("chain should have 0 endwares")
+	}
 	if len(newChain.constructors) != 4 {
 		t.Error("newChain should have 4 constructors")
+	}
+	if len(newChain.endwares) != 0 {
+		t.Error("newChain should have 0 endwares")
 	}
 
 	chained := newChain.Then(testApp)
@@ -159,21 +165,80 @@ func TestAppendAddsHandlersCorrectly(t *testing.T) {
 	}
 }
 
+func TestAppendEndwareAddsHandlersCorrectly(t *testing.T) {
+	chain := New(tagMiddleware("t1\n")).After(tagEndware("e1\n"), tagEndware("e2\n"))
+	newChain := chain.AppendEndware(tagEndware("e3\n"), tagEndware("e4\n"))
+
+	if len(chain.constructors) != 1 {
+		t.Error("chain should have 1 constructor")
+	}
+	if len(chain.endwares) != 2 {
+		t.Error("chain should have 2 endwares")
+	}
+	if len(newChain.constructors) != 1 {
+		t.Error("newChain should have 1 constructor")
+	}
+	if len(newChain.endwares) != 4 {
+		t.Error("newChain should have 4 endwares")
+	}
+
+	chained := newChain.Then(testApp)
+
+	w := httptest.NewRecorder()
+	r, err := http.NewRequest("GET", "/", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	chained.ServeHTTP(w, r)
+
+	if w.Body.String() != "t1\napp\ne1\ne2\ne3\ne4\n" {
+		t.Error("AppendEndware does not add handlers correctly")
+	}
+}
+
 func TestAppendRespectsImmutability(t *testing.T) {
-	chain := New(tagMiddleware(""))
+	chain := New(tagMiddleware("")).After(tagEndware(""))
 	newChain := chain.Append(tagMiddleware(""))
 
 	if &chain.constructors[0] == &newChain.constructors[0] {
-		t.Error("Append does not respect immutability")
+		t.Error("Append does not respect constructor immutability")
+	}
+
+	if &chain.endwares[0] == &newChain.endwares[0] {
+		t.Error("Append does not respect endware immutability")
 	}
 }
 
 func TestAppendEndwareRespectsImmutability(t *testing.T) {
-	chain := New().After(tagEndware(""))
+	chain := New(tagMiddleware("")).After(tagEndware(""))
 	newChain := chain.AppendEndware(tagEndware(""))
 
+	if &chain.constructors[0] == &newChain.constructors[0] {
+		t.Error("AppendEndware does not respect constructor immutability")
+	}
+
 	if &chain.endwares[0] == &newChain.endwares[0] {
-		t.Error("AppendEndware does not respect immutability")
+		t.Error("AppendEndware does not respect endware immutability")
+	}
+}
+
+func TestExtendsRespectsImmutability(t *testing.T) {
+	chain := New(tagMiddleware("")).After(tagEndware(""))
+	newChain := chain.Extend(New(tagMiddleware("")))
+
+	// chain.constructors[0] should have the same functionality as
+	// newChain.constructors[1], but check both anyways
+	if &chain.constructors[0] == &newChain.constructors[0] {
+		t.Error("Extends does not respect constructor immutability")
+	}
+
+	if &chain.constructors[0] == &newChain.constructors[1] {
+		t.Error("Extends does not respect constructor immutability")
+	}
+
+	if &chain.endwares[0] == &newChain.endwares[0] {
+		t.Error("Extends does not respect endware immutability")
 	}
 }
 
