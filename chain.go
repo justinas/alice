@@ -24,7 +24,7 @@ type Chain struct {
 // New serves no other function,
 // constructors are only called upon a call to Then().
 func New(constructors ...Constructor) Chain {
-	return Chain{append(([]Constructor)(nil), constructors...), nil}
+	return Chain{append(([]Constructor)(nil), constructors...), make([]Endware, 0)}
 }
 
 // Then chains the middleware and endwares and returns the final http.Handler.
@@ -52,19 +52,34 @@ func (c Chain) Then(h http.Handler) http.Handler {
 		h = http.DefaultServeMux
 	}
 
-	h = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		h.ServeHTTP(w, r)
-
-		for _, endwareFn := range c.endwares {
-			endwareFn.ServeHTTP(w, r)
-		}
-	})
+	if len(c.endwares) > 0 {
+		h = endwareHandler{h, c.endwares}
+	}
 
 	for i := range c.constructors {
 		h = c.constructors[len(c.constructors)-1-i](h)
 	}
 
 	return h
+}
+
+// endwareHandler represents a handler that has been modified
+// to execute endwares afterwards. This is a helper for Then()
+// because if we just wrap it in an anonymous
+// 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request)))
+// there is a stack overflow
+type endwareHandler struct {
+	handler  http.Handler
+	endwares []Endware
+}
+
+// ServeHTTP serves the main endwareHandler's handler as well as
+// calling all of the individual endwares afterwards.
+func (eh endwareHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	eh.handler.ServeHTTP(w, r)
+	for _, endware := range eh.endwares {
+		endware.ServeHTTP(w, r)
+	}
 }
 
 // ThenFunc works identically to Then, but takes
