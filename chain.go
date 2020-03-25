@@ -125,10 +125,9 @@ func (c Chain) Append(constructors ...Constructor) Chain {
 //		// requests to aHtml hitting nosurfs failure handler go:
 //				m1 -> nosurf -> m2 -> csrfFail -> e1
 func (c Chain) Extend(chain Chain) Chain {
-	newC := c.
+	return c.
 		Append(chain.constructors...).
 		AppendEndware(chain.endwares...)
-	return newC
 }
 
 // Endware is functionality executed after a the main handler is called
