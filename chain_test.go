@@ -225,7 +225,8 @@ func TestAppendEndwareRespectsImmutability(t *testing.T) {
 
 func TestExtendsRespectsImmutability(t *testing.T) {
 	chain := New(tagMiddleware("")).After(tagEndware(""))
-	newChain := chain.Extend(New(tagMiddleware("")))
+	newChain := New(tagMiddleware("")).After(tagEndware(""))
+	newChain = chain.Extend(newChain)
 
 	// chain.constructors[0] should have the same functionality as
 	// newChain.constructors[1], but check both anyways
@@ -238,6 +239,10 @@ func TestExtendsRespectsImmutability(t *testing.T) {
 	}
 
 	if &chain.endwares[0] == &newChain.endwares[0] {
+		t.Error("Extends does not respect endware immutability")
+	}
+
+	if &chain.endwares[0] == &newChain.endwares[1] {
 		t.Error("Extends does not respect endware immutability")
 	}
 }
