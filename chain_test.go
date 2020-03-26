@@ -68,10 +68,10 @@ func TestAfter(t *testing.T) {
 
 	slice := []Endware{e1, e2}
 
-	chain := New().After(slice...)
+	chain := New().FinishWith(slice...)
 	for k := range slice {
 		if !funcsEqual(chain.endwares[k], slice[k]) {
-			t.Error("After does not add endwares correctly")
+			t.Error("FinishWith does not add endwares correctly")
 		}
 	}
 }
@@ -83,19 +83,19 @@ func TestThenWorksWithNoMiddleware(t *testing.T) {
 }
 
 func TestThenWorksWithNoEndware(t *testing.T) {
-	if !funcsEqual(New().After().Then(testApp), testApp) {
+	if !funcsEqual(New().FinishWith().Then(testApp), testApp) {
 		t.Error("Then does not work with no endware")
 	}
 }
 
 func TestThenTreatsNilAsDefaultServeMux(t *testing.T) {
-	if New().After().Then(nil) != http.DefaultServeMux {
+	if New().FinishWith().Then(nil) != http.DefaultServeMux {
 		t.Error("Then does not treat nil as DefaultServeMux")
 	}
 }
 
 func TestThenFuncTreatsNilAsDefaultServeMux(t *testing.T) {
-	if New().After().ThenFunc(nil) != http.DefaultServeMux {
+	if New().FinishWith().ThenFunc(nil) != http.DefaultServeMux {
 		t.Error("ThenFunc does not treat nil as DefaultServeMux")
 	}
 }
@@ -104,7 +104,7 @@ func TestThenFuncConstructsHandlerFunc(t *testing.T) {
 	fn := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(200)
 	})
-	chained := New().After().ThenFunc(fn)
+	chained := New().FinishWith().ThenFunc(fn)
 	rec := httptest.NewRecorder()
 
 	chained.ServeHTTP(rec, (*http.Request)(nil))
@@ -122,7 +122,7 @@ func TestThenOrdersHandlersCorrectly(t *testing.T) {
 	e2 := tagEndware("e2\n")
 	e3 := tagEndware("e3\n")
 
-	chained := New(t1, t2, t3).After(e1, e2, e3).Then(testApp)
+	chained := New(t1, t2, t3).FinishWith(e1, e2, e3).Then(testApp)
 
 	w := httptest.NewRecorder()
 	r, err := http.NewRequest("GET", "/", nil)
@@ -170,7 +170,7 @@ func TestAppendAddsHandlersCorrectly(t *testing.T) {
 }
 
 func TestAppendEndwareAddsHandlersCorrectly(t *testing.T) {
-	chain := New(tagMiddleware("t1\n")).After(tagEndware("e1\n"), tagEndware("e2\n"))
+	chain := New(tagMiddleware("t1\n")).FinishWith(tagEndware("e1\n"), tagEndware("e2\n"))
 	newChain := chain.AppendEndware(tagEndware("e3\n"), tagEndware("e4\n"))
 
 	if len(chain.constructors) != 1 {
@@ -202,7 +202,7 @@ func TestAppendEndwareAddsHandlersCorrectly(t *testing.T) {
 }
 
 func TestAppendRespectsImmutability(t *testing.T) {
-	chain := New(tagMiddleware("")).After(tagEndware(""))
+	chain := New(tagMiddleware("")).FinishWith(tagEndware(""))
 	newChain := chain.Append(tagMiddleware(""))
 
 	if &chain.constructors[0] == &newChain.constructors[0] {
@@ -215,7 +215,7 @@ func TestAppendRespectsImmutability(t *testing.T) {
 }
 
 func TestAppendEndwareRespectsImmutability(t *testing.T) {
-	chain := New(tagMiddleware("")).After(tagEndware(""))
+	chain := New(tagMiddleware("")).FinishWith(tagEndware(""))
 	newChain := chain.AppendEndware(tagEndware(""))
 
 	if &chain.constructors[0] == &newChain.constructors[0] {
@@ -228,8 +228,8 @@ func TestAppendEndwareRespectsImmutability(t *testing.T) {
 }
 
 func TestExtendsRespectsImmutability(t *testing.T) {
-	chain := New(tagMiddleware("")).After(tagEndware(""))
-	newChain := New(tagMiddleware("")).After(tagEndware(""))
+	chain := New(tagMiddleware("")).FinishWith(tagEndware(""))
+	newChain := New(tagMiddleware("")).FinishWith(tagEndware(""))
 	newChain = chain.Extend(newChain)
 
 	// chain.constructors[0] should have the same functionality as
@@ -254,7 +254,7 @@ func TestExtendsRespectsImmutability(t *testing.T) {
 func TestExtendAddsHandlersCorrectly(t *testing.T) {
 	chain1 := New(tagMiddleware("t1\n"), tagMiddleware("t2\n"))
 	chain2 := New(tagMiddleware("t3\n"), tagMiddleware("t4\n")).
-		After(tagEndware("e1\n"), tagEndware("e2\n"))
+		FinishWith(tagEndware("e1\n"), tagEndware("e2\n"))
 	newChain := chain1.Extend(chain2)
 
 	if len(chain1.constructors) != 2 {
@@ -294,7 +294,7 @@ func TestExtendAddsHandlersCorrectly(t *testing.T) {
 }
 
 func TestExtendRespectsImmutability(t *testing.T) {
-	chain := New(tagMiddleware("")).After(tagEndware(""))
+	chain := New(tagMiddleware("")).FinishWith(tagEndware(""))
 	newChain := chain.Extend(New())
 
 	if &chain.constructors[0] == &newChain.constructors[0] {
