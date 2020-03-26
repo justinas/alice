@@ -47,7 +47,7 @@ func (eh endwareHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // Then chains the middleware and endwares and returns the final http.Handler.
-//     New(m1, m2, m3).FinishWith(e1, e2, e3).Then(h)
+//     New(m1, m2, m3).Finally(e1, e2, e3).Then(h)
 // is equivalent to:
 //     m1(m2(m3(h)))
 // followed by:
@@ -57,7 +57,7 @@ func (eh endwareHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // (assuming every middleware/endwares calls the following one).
 //
 // A chain can be safely reused by calling Then() several times.
-//     stdStack := alice.New(ratelimitHandler, csrfHandler).FinishWith(loggingHandler)
+//     stdStack := alice.New(ratelimitHandler, csrfHandler).Finally(loggingHandler)
 //     indexPipe = stdStack.Then(indexHandler)
 //     authPipe = stdStack.Then(authHandler)
 // Note that constructors and endwares are called on every call to Then()
@@ -121,7 +121,7 @@ func (c Chain) Append(constructors ...Constructor) Chain {
 // Extend returns a new chain, leaving the original one untouched.
 //
 //     stdChain := alice.New(m1, m2)
-//     ext1Chain := alice.New(m3, m4).FinishWith(e1, e2)
+//     ext1Chain := alice.New(m3, m4).Finally(e1, e2)
 //     ext2Chain := stdChain.Extend(ext1Chain)
 //     // requests in stdChain  go m1 -> m2 -> handler
 //     // requests in ext1Chain go m3 -> m4 -> handler -> e1 -> e2
@@ -129,7 +129,7 @@ func (c Chain) Append(constructors ...Constructor) Chain {
 //
 // Another example:
 //  aHtmlAfterNosurf := alice.New(m2)
-//  logRequestChain := aHtmlAfterNosurf.FinishWith(e1)
+//  logRequestChain := aHtmlAfterNosurf.Finally(e1)
 // 	aHtml := alice.New(m1, func(h http.Handler) http.Handler {
 // 		csrf := nosurf.New(h)
 // 		csrf.SetFailureHandler(logRequestChain.ThenFunc(csrfFail))
@@ -152,11 +152,11 @@ func (c Chain) Extend(chain Chain) Chain {
 // e.g. re-reading a request body, re-setting the response headers, etc.
 type Endware http.Handler
 
-// FinishWith creates a new chain with the original chain's
+// Finally creates a new chain with the original chain's
 // constructors and endwares, as well as the provided endwares.
 // Endwares are executed after both the constructors and
 // the Then() handler are called.
-func (c Chain) FinishWith(endwares ...Endware) Chain {
+func (c Chain) Finally(endwares ...Endware) Chain {
 	newEnds := make([]Endware, 0, len(c.endwares)+len(endwares))
 	newEnds = append(newEnds, c.endwares...)
 	newEnds = append(newEnds, endwares...)
@@ -166,22 +166,22 @@ func (c Chain) FinishWith(endwares ...Endware) Chain {
 	return newC
 }
 
-// FinishWithFuncs works identically to FinishWith, but takes HandlerFuncs
+// FinallyFuncs works identically to Finally, but takes HandlerFuncs
 // instead of Endwares.
 //
 // The following two statements are equivalent:
-//     c.FinishWith(http.HandlerFunc(fn1), http.HandlerFunc(fn2))
-//     c.FinishWithFuncs(fn1, fn2)
+//     c.Finally(http.HandlerFunc(fn1), http.HandlerFunc(fn2))
+//     c.FinallyFuncs(fn1, fn2)
 //
-// FinishWithFuncs provides all the guarantees of FinishWith.
-func (c Chain) FinishWithFuncs(fns ...func(w http.ResponseWriter, r *http.Request)) Chain {
+// FinallyFuncs provides all the guarantees of Finally.
+func (c Chain) FinallyFuncs(fns ...func(w http.ResponseWriter, r *http.Request)) Chain {
 	// convert each http.HandlerFunc into an Endware
 	endwares := make([]Endware, len(fns))
 	for i, fn := range fns {
 		endwares[i] = http.HandlerFunc(fn)
 	}
 
-	return c.FinishWith(endwares...)
+	return c.Finally(endwares...)
 }
 
 // AppendEndware extends a chain, adding the specified endwares
@@ -190,12 +190,12 @@ func (c Chain) FinishWithFuncs(fns ...func(w http.ResponseWriter, r *http.Reques
 // AppendEndware returns a new chain, leaving the original one untouched.
 // The new chain will have the original chain's constructors.
 //
-//     stdChain := alice.New(m1).FinishWith(e1, e2)
+//     stdChain := alice.New(m1).Finally(e1, e2)
 //     extChain := stdChain.AppendEndware(e3, e4)
 //     // requests in stdHandler go m1 -> handler -> e1 -> e2
 //     // requests in extHandler go m1 -> handler -> e1 -> e2 -> e3 -> e4
 func (c Chain) AppendEndware(endwares ...Endware) Chain {
-	return New(c.constructors...).FinishWith(append(c.endwares, endwares...)...)
+	return New(c.constructors...).Finally(append(c.endwares, endwares...)...)
 }
 
 // AppendEndwareFuncs works identically to AppendEndware, but takes HandlerFuncs
