@@ -57,14 +57,9 @@ func TestNew(t *testing.T) {
 	}
 }
 
-func TestAfter(t *testing.T) {
-	e1 := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("e1\n"))
-	})
-
-	e2 := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("e2\n"))
-	})
+func TestFinally(t *testing.T) {
+	e1 := tagEndware("e1\n")
+	e2 := tagEndware("e2\n")
 
 	slice := []Endware{e1, e2}
 
