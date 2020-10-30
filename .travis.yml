@@ -3,17 +3,50 @@ language: go
 matrix:
   include:
     - go: 1.2.x
+      arch: amd64
     - go: 1.3.x
+      arch: amd64
     - go: 1.4.x
+      arch: amd64
     - go: 1.5.x
+      arch: amd64
+    - go: 1.5.x
+      arch: ppc64le
+    - go: 1.6.x 
+      arch: amd64
     - go: 1.6.x
+      arch: ppc64le
     - go: 1.7.x
+      arch: amd64
+    - go: 1.7.x
+      arch: ppc64le
     - go: 1.8.x
+      arch: amd64
+    - go: 1.8.x
+      arch: ppc64le
     - go: 1.9.x
+      arch: amd64
+    - go: 1.9.x
+      arch: ppc64le
     - go: 1.10.x
+      arch: amd64
+    - go: 1.10.x
+      arch: ppc64le
     - go: 1.11.x
+      arch: amd64
+    - go: 1.11.x
+      arch: ppc64le
     - go: 1.12.x
+      arch: amd64
+    - go: 1.12.x
+      arch: ppc64le
     - go: 1.13.x
+      arch: amd64
+    - go: 1.13.x
+      arch: ppc64le
     - go: tip
+      arch: amd64
+    - go: tip
+      arch: ppc64le
   allow_failures:
     - go: tip
