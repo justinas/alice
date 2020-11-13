@@ -12,12 +12,11 @@ import (
 // that writes its own "tag" into the RW and does nothing else.
 // Useful in checking if a chain is behaving in the right order.
 func tagMiddleware(tag string) Constructor {
-	return func(h http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Write([]byte(tag))
-			h.ServeHTTP(w, r)
-		})
+	var h = func(w http.ResponseWriter, r *http.Request, next http.Handler) {
+		w.Write([]byte(tag))
+		next.ServeHTTP(w, r)
 	}
+	return ConstructorFunc(h)
 }
 
 // Not recommended (https://golang.org/pkg/reflect/#Value.Pointer),

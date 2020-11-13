@@ -8,6 +8,30 @@ import "net/http"
 // so in most cases you can just pass somepackage.New
 type Constructor func(http.Handler) http.Handler
 
+// A MiddlewareFunc performs a middleware action, and then passes
+// control to the supplied http.Handler
+type MiddlewareFunc func(http.ResponseWriter, *http.Request, http.Handler)
+
+// ConstructorFunc adapts a MiddlewareFunc to be used as a Constructor.
+// This simplifies the use of closures to construct middleware with bound
+// parameters. Eg:
+//    func AddHeader(key, value string) Constructor {
+//      var h = func(w http.ResponseWriter, r *http.Request, next http.Handler) {
+//        w.Header().Add(key, value)
+//        next.ServeHTTP(w, r)
+//      }
+//      return ConstructorFunc(h)
+//    }
+func ConstructorFunc(f MiddlewareFunc) Constructor {
+	return f.construct
+}
+
+func (f MiddlewareFunc) construct(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		f(w, r, next)
+	})
+}
+
 // Chain acts as a list of http.Handler constructors.
 // Chain is effectively immutable:
 // once created, it will always hold
