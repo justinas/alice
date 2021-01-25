@@ -26,7 +26,7 @@ behaves exactly like Alice.
 Alice is as minimal as it gets:
 in essence, it's just a for loop that does the wrapping for you.
 
-Check out [this blog post](http://justinas.org/alice-painless-middleware-chaining-for-go/)
+Check out [this blog post](http://justinas.org/alice-painless-middleware-chaining-for-go)
 for explanation how Alice is different from other chaining solutions.
 
 ### Usage
