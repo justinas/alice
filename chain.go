@@ -63,6 +63,8 @@ func (c Chain) Then(h http.Handler) http.Handler {
 //
 // ThenFunc provides all the guarantees of Then.
 func (c Chain) ThenFunc(fn http.HandlerFunc) http.Handler {
+	// This nil check cannot be removed due to the "nil is not nil"
+	// common mistake in Go.
 	if fn == nil {
 		return c.Then(nil)
 	}
