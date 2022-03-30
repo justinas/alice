@@ -47,8 +47,9 @@ func (c Chain) Then(h http.Handler) http.Handler {
 		h = http.DefaultServeMux
 	}
 
+	l := len(c.constructors)
 	for i := range c.constructors {
-		h = c.constructors[len(c.constructors)-1-i](h)
+		h = c.constructors[l-1-i](h)
 	}
 
 	return h
